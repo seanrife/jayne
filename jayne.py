@@ -1,5 +1,5 @@
 import argparse
-from fuzzywuzzy import fuzz
+from similarity.cosine import Cosine
 import PyPDF2
 import os
 from nltk.tokenize import sent_tokenize
@@ -38,20 +38,18 @@ for file in os.listdir(settings["dir"]):
 
 print("Text extracted. Analyzing... (this will probably take forever)")
 
-# report = {}
-working_list = []
+report = {}
+cosine = Cosine(len(main_dict))
+out_list = []
 
-# This is ugly, slow, inefficient, and probably causes global warming.
-# It also analyzes everything twice, which is dumb.
-# Other than that, it's fine.
-for _key, _value in main_dict.items():
-    for _i in _value:
-        for key, value in main_dict.items():
-            if key == _key:
-                continue
-            for i in value:
-                working_list.append(fuzz.ratio(i, _i))
+for key, value in main_dict.items():
+    working_cosine = cosine.get_profile(value[0])
+    report[key] = working_cosine
 
-print("Analyzed similarity of {0} sentences extracted from {1} files."
-      .format(len(working_list), len(os.listdir(settings["dir"]))))
-print("Total similarity: {0}".format((sum(working_list))/len(working_list)))
+for _key, _value in report.items():
+    for key, value in report.items():
+        out_list.append(cosine.similarity_profiles(_value, value))
+
+print("Analyzed similarity of {0} files."
+      .format(len(os.listdir(settings["dir"]))))
+print("Total similarity: {0}".format((sum(out_list))/len(out_list)))
