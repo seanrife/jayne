@@ -3,6 +3,7 @@ from similarity.cosine import Cosine
 import PyPDF2
 import os
 from nltk.tokenize import sent_tokenize
+from similarity.levenshtein import Levenshtein
 
 aParser = argparse.ArgumentParser(
     description='Extract text from PDFs and analyze their similarity.')
@@ -33,17 +34,17 @@ print("Extracting text from PDFs... this may take a while.")
 for file in os.listdir(settings["dir"]):
     if file.endswith(".pdf"):
         working_text = extract_text(settings["dir"] + "/" + file)
-        sent_tokenized = sent_tokenize(working_text)
-        main_dict[file] = sent_tokenized
+        #sent_tokenized = sent_tokenize(working_text)
+        main_dict[file] = working_text
 
-print("Text extracted. Analyzing... (this will probably take forever)")
+print("Text extracted. Analyzing cosine distance...")
 
 report = {}
-cosine = Cosine(len(main_dict))
+cosine = Cosine(len(os.listdir(settings["dir"])))
 out_list = []
 
 for key, value in main_dict.items():
-    working_cosine = cosine.get_profile(value[0])
+    working_cosine = cosine.get_profile(value)
     report[key] = working_cosine
 
 for _key, _value in report.items():
