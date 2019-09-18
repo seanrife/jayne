@@ -2,6 +2,7 @@ from bs4 import BeautifulSoup
 import os
 
 data_dir = "/home/sean/jayne/docs/naser/"
+min_length = 100
 
 
 def get_grafs(xml_input):
@@ -12,8 +13,9 @@ def get_grafs(xml_input):
         # TODO: clean the output and remove tags
         # DFL
         graf = graf.get_text()
-        grafs_list.append(graf)
-    return grafs
+        if len(graf) >= 100:
+            grafs_list.append(graf)
+    return grafs_list
 
 
 def generate_filelist(data_dir):
