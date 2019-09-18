@@ -16,6 +16,7 @@ Needs the following packages:
  - python-Levenshtein
  - singledispatch
  - six
+ - bs4
 
 (or just install `requirements.txt`)
 
