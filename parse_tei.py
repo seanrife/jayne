@@ -1,11 +1,8 @@
 from bs4 import BeautifulSoup
 import os
 
-data_dir = "/home/sean/jayne/docs/naser/"
-min_length = 100
 
-
-def get_grafs(xml_input):
+def get_grafs(xml_input, min_length):
     grafs_list = []
     soup = BeautifulSoup(xml_input, "lxml")
     grafs = soup.find_all('p')
@@ -13,7 +10,7 @@ def get_grafs(xml_input):
         # TODO: clean the output and remove tags
         # DFL
         graf = graf.get_text()
-        if len(graf) >= 100:
+        if len(graf) >= min_length:
             grafs_list.append(graf)
     return grafs_list
 
@@ -27,10 +24,14 @@ def generate_filelist(data_dir):
     return file_list
 
 
-file_list = generate_filelist(data_dir)
+def process_tei(data_dir, min_length):
 
-for file in file_list:
-    with open(file, 'r') as f:
-        data = f.read()
-    grafs = get_grafs(data)
-    print(grafs)
+    file_list = generate_filelist(data_dir)
+
+    graf_list = []
+    for file in file_list:
+        with open(file, 'r') as f:
+            data = f.read()
+        grafs = get_grafs(data, min_length)
+        graf_list.append((file, grafs))
+    return graf_list
