@@ -1,5 +1,6 @@
 from bs4 import BeautifulSoup
 import os
+from nltk.tokenize import sent_tokenize
 
 
 def get_grafs(xml_input, min_length):
@@ -11,7 +12,9 @@ def get_grafs(xml_input, min_length):
         # DFL
         graf = graf.get_text()
         if len(graf) >= min_length:
-            grafs_list.append(graf)
+            sent_tokenize_list = sent_tokenize(str(graf))
+            for sent in sent_tokenize_list:
+                grafs_list.append(sent)
     return grafs_list
 
 
@@ -33,5 +36,5 @@ def process_tei(data_dir, min_length):
         with open(file, 'r') as f:
             data = f.read()
         grafs = get_grafs(data, min_length)
-        graf_list.append((file, grafs))
+        graf_list.append(grafs)
     return graf_list
