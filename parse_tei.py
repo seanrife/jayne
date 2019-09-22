@@ -28,13 +28,12 @@ def generate_filelist(data_dir):
 
 
 def process_tei(data_dir, min_length):
-
+    out_dict = {}
     file_list = generate_filelist(data_dir)
 
-    graf_list = []
     for file in file_list:
         with open(file, 'r') as f:
             data = f.read()
         grafs = get_grafs(data, min_length)
-        graf_list.append(grafs)
-    return graf_list
+        out_dict[file] = grafs
+    return out_dict
