@@ -3,6 +3,7 @@ import config
 import time
 import argparse
 import os
+import io
 
 
 grobid_address = config.grobid['host']
@@ -31,20 +32,20 @@ in_dir = settings["in_dir"]
 out_dir = settings["out_dir"]
 
 
-def grobid(file_path, grobid_address, grobid_path, grobid_port):
+def grobid(file_name, grobid_address, grobid_path, grobid_port):
+    with open(in_dir + "/" + file_name, "rb") as f:
+        data = io.BytesIO(f.read())
 
-    payload = {'input': file_path}
+    payload = {'input': data}
     data = {'consolidateHeader': '0',
             'consolidateCitations': '0'
             }
 
     try:
-        endpoint = "http://{0}/:{1}{2}/api/processFulltextDocument".format(
+        endpoint = "http://{0}:{1}/api/processFulltextDocument".format(
             grobid_address,
-            grobid_port,
-            grobid_path
+            grobid_port
         )
-
         response = requests.post(endpoint,
                                  files=payload,
                                  data=data,
@@ -53,7 +54,7 @@ def grobid(file_path, grobid_address, grobid_path, grobid_port):
 
         if status_code == 503:
             time.sleep(1)
-            return grobid(file_path, grobid_address, grobid_path, grobid_port)
+            return grobid(file_name, grobid_address, grobid_path, grobid_port)
 
         if status_code != 200:
             raise Exception("""
@@ -75,5 +76,9 @@ def write_output(filename, data):
 
 
 for filename in os.listdir(in_dir):
-    xml = grobid(filename, grobid_address, grobid_path, grobid_port)
-    write_output(filename, xml)
+    print("Working on " + filename)
+    try:
+        xml = grobid(filename, grobid_address, grobid_path, grobid_port)
+        write_output(out_dir + "/" + filename, xml)
+    except Exception as e:
+        print("Error processing file. Skipping. " + str(e))
