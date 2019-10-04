@@ -4,7 +4,8 @@ from analyze import get_distance
 from parse_tei import process_tei
 from printout import display
 import csv
-
+import asyncio
+from aiomultiprocess import Pool
 
 aParser = argparse.ArgumentParser(
     description='Analyze the similarity of text in TEI XML files.')
@@ -28,6 +29,7 @@ out_file = settings["out_file"]
 min_length = config.analysis['min_length']
 cutoff_score = config.analysis['cutoff_score']
 analysis_type = config.analysis["analysis_type"]
+process_count = config.system["process_count"]
 
 if out_file:
     with open(out_file, mode='a') as csv_file:
@@ -57,7 +59,8 @@ def handle_output(key, file, text, item, distance, analysis_type):
         write_line(out_file, key, file, text, item, distance, analysis_type)
 
 
-def compare(file, text, data):
+async def compare(package):
+    file, text, data = package
     for key, v in data.items():
         for item in v:
             if (len(text) > min_length and len(item) > min_length and
@@ -72,8 +75,14 @@ def compare(file, text, data):
                                   analysis_type)
 
 
+async def run():
+    for k, v in results.items():
+        for item in v:
+            package = (k, item, results)
+            async with Pool() as pool:
+                await pool.map(compare, (package,))
+
+
 results = process_tei(in_dir, min_length)
 
-for k, v in results.items():
-    for item in v:
-        compare(k, item, results)
+asyncio.run(run())
