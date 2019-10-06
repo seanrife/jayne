@@ -99,7 +99,6 @@ def analyze_chunk(chunk):
 
 def run(chunk):
     for item in chunk:
-        print(item.keys())
         analyze_chunk(item)
 
 
@@ -110,7 +109,6 @@ jobs = []
 chunks_as_list = create_chunks(results)
 
 chunk_size = int(len(chunks_as_list)/process_count)
-print(chunk_size)
 
 chunks = [chunks_as_list[x:x+chunk_size]
           for x in range(0, len(chunks_as_list), chunk_size)]
