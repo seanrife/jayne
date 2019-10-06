@@ -1,6 +1,7 @@
 from bs4 import BeautifulSoup
 import os
 from nltk.tokenize import sent_tokenize
+import config
 
 
 def get_grafs(xml_input, min_length):
@@ -12,9 +13,12 @@ def get_grafs(xml_input, min_length):
         # DFL
         graf = graf.get_text()
         if len(graf) >= min_length:
-            sent_tokenize_list = sent_tokenize(str(graf))
-            for sent in sent_tokenize_list:
-                grafs_list.append(sent)
+            if config.analysis['level'] == 'sentence':
+                item = sent_tokenize(str(graf))
+            elif config.analysis['level'] == 'paragraph':
+                item = graf
+            for i in item:
+                grafs_list.append(i)
     return grafs_list
 
 
