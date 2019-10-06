@@ -4,8 +4,8 @@ from analyze import get_distance
 from parse_tei import process_tei
 from printout import display
 import csv
-import asyncio
-from aiomultiprocess import Pool
+import multiprocessing as mp
+from itertools import combinations
 
 aParser = argparse.ArgumentParser(
     description='Analyze the similarity of text in TEI XML files.')
@@ -59,8 +59,7 @@ def handle_output(key, file, text, item, distance, analysis_type):
         write_line(out_file, key, file, text, item, distance, analysis_type)
 
 
-async def compare(package):
-    file, text, data = package
+def compare(file, text, data):
     for key, v in data.items():
         for item in v:
             if (len(text) > min_length and len(item) > min_length and
@@ -75,14 +74,47 @@ async def compare(package):
                                   analysis_type)
 
 
-async def run():
-    for k, v in results.items():
+# TODO: change "chunk" to "chonk" because James likes cats
+def create_chunk(keys, results):
+    chunk = {}
+    for key in keys:
+        chunk[key] = results[key]
+    return chunk
+
+
+def create_chunks(results):
+    chunk_list = []
+    key_combinations = combinations(results, 2)
+    for keys in key_combinations:
+        chunk = create_chunk(keys, results)
+        chunk_list.append(chunk)
+    return chunk_list
+
+
+def analyze_chunk(chunk):
+    for k, v in chunk.items():
         for item in v:
-            package = (k, item, results)
-            async with Pool() as pool:
-                await pool.map(compare, (package,))
+            compare(k, item, chunk)
+
+
+def run(chunk):
+    for item in chunk:
+        print(item.keys())
+        analyze_chunk(item)
 
 
 results = process_tei(in_dir, min_length)
 
-asyncio.run(run())
+jobs = []
+
+chunks_as_list = create_chunks(results)
+
+chunk_size = int(len(chunks_as_list)/process_count)
+print(chunk_size)
+
+chunks = [chunks_as_list[x:x+chunk_size]
+          for x in range(0, len(chunks_as_list), chunk_size)]
+for chunk in chunks:
+    p = mp.Process(target=run, args=(chunk,))
+    jobs.append(p)
+    p.start()
