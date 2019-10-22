@@ -10,12 +10,7 @@ Tested on python 3.6. Other versions may work. Deviate from this at your own per
 
 Needs the following packages:
 
- - fuzzywuzzy
  - nltk
- - PyPDF2
- - python-Levenshtein
- - singledispatch
- - six
  - bs4
 
 (or just install `requirements.txt`)
