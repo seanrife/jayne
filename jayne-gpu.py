@@ -1,4 +1,4 @@
-import tensorflow as tf
+import tensorflow.compat.v1 as tf
 import argparse
 import config
 from parse_tei import process_tei
@@ -6,6 +6,8 @@ from printout import display
 import csv
 import os
 import time
+
+tf.disable_v2_behavior()
 
 aParser = argparse.ArgumentParser(
     description='Analyze the similarity of text in TEI XML files.')
@@ -106,7 +108,6 @@ def compare(file, text, data):
                 feed_dict = {hyp_input: hypothesis,
                              truth_input: truth}
                 distance = sess.run(edit_distances, feed_dict=feed_dict)
-                #print(similarity[0][0])
                 if distance[0][0] <= cutoff_score:
                     handle_output(key,
                                   file,
@@ -125,12 +126,6 @@ def analyze(data):
 
 
 sess = tf.Session()
-
-sess = tf.Session(config=tf.ConfigProto(
-                  device_count={"CPU": 4},
-                  inter_op_parallelism_threads=4,
-                  intra_op_parallelism_threads=8,
-                  ))
 
 start_time = time.clock()
 
