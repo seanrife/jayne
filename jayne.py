@@ -82,8 +82,7 @@ def compare(file, text, data):
     for key, v in data.items():
         count = count + 1
         for item in v:
-            if (len(text) > min_length and len(item) > min_length and
-                    key is not file):
+            if key is not file:
                 distance = get_distance(text, item)
                 if distance <= cutoff_score:
                     handle_output(key,
@@ -131,6 +130,8 @@ jobs = []
 chunks_as_list = create_chunks(results)
 
 chunk_size = int(len(chunks_as_list)/process_count)
+if chunk_size == 0:
+    chunk_size = 1
 
 chunks = [chunks_as_list[x:x+chunk_size]
           for x in range(0, len(chunks_as_list), chunk_size)]
@@ -139,8 +140,8 @@ start_time = time.clock()
 
 mkdirp('logs')
 
-logger('jayne v{0} initialized').format(version)
-logger('START TIME: {0}').format(time.strftime("%Y-%m-%d %H:%M:%S"))
+logger('jayne v{0} initialized'.format(version))
+logger('START TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
 logger('Total number of comparisons requested: '.format(len(chunks_as_list)))
 logger('Number of independent processes: '.format(process_count))
 logger('')
@@ -155,5 +156,5 @@ for job in jobs:
 
 end_time = time.clock()
 
-logger('END TIME: {0}').format(time.strftime("%Y-%m-%d %H:%M:%S"))
+logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
 logger('Time to process: '.format(end_time-start_time))

@@ -97,8 +97,7 @@ def compare(file, text, data):
     for key, v in data.items():
         count = count + 1
         for item in v:
-            if (len(text) > min_length and len(item) > min_length and
-                    key is not file):
+            if key is not file:
                 hypothesis, truth = create_sparse_inputs(text, item)
                 hyp_input = tf.sparse_placeholder(dtype=tf.string)
                 truth_input = tf.sparse_placeholder(dtype=tf.string)
@@ -114,7 +113,7 @@ def compare(file, text, data):
                                   text,
                                   item,
                                   distance[0][0],
-                                  analysis_type)
+                                  'lev')
         if count > 0:
             return None
 
