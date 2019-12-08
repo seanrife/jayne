@@ -57,13 +57,6 @@ def mkdirp(path):
         os.makedirs(path, exist_ok=True)
 
 
-def create_sparse_vec(word_list):
-    num_words = len(word_list)
-    indices = [[xi, 0, yi] for xi, x in enumerate(word_list) for yi, y in enumerate(x)]
-    chars = list(''.join(word_list))
-    return(tf.SparseTensorValue(indices, chars, [num_words, 1, 1]))
-
-
 def write_line(out_file, file1, file2, text1, text2, score, score_type):
     with open(out_file, mode='a') as csv_file:
         oa_writer = csv.writer(csv_file,
@@ -84,38 +77,23 @@ def logger(text):
         logfile.write(text + '\n')
 
 
-def create_sparse_inputs(text, item):
-    hypothesis = [text]
-    truth = [item]
-    hyp_string_sparse = create_sparse_vec(hypothesis)
-    truth_string_sparse = create_sparse_vec(truth*len(hypothesis))
-    return hyp_string_sparse, truth_string_sparse
-
-
 def compare(file, text, data):
     count = 0
     for key, v in data.items():
         count = count + 1
-        for item in v:
-            if key is not file:
-                hypothesis, truth = create_sparse_inputs(text, item)
-                hyp_input = tf.sparse_placeholder(dtype=tf.string)
-                truth_input = tf.sparse_placeholder(dtype=tf.string)
-                edit_distances = tf.edit_distance(hyp_input,
-                                                  truth_input,
-                                                  normalize=True)
-                feed_dict = {hyp_input: hypothesis,
-                             truth_input: truth}
-                distance = sess.run(edit_distances, feed_dict=feed_dict)
-                if distance[0][0] <= cutoff_score:
-                    handle_output(key,
-                                  file,
-                                  text,
-                                  item,
-                                  distance[0][0],
-                                  'lev')
-        if count > 0:
-            return None
+        if key is not file:
+            print([text])
+            hypothesis_list = v
+            truth_list = [text]
+            num_h_words = len(hypothesis_list)
+            h_indices = [[xi, 0, yi] for xi, x in enumerate(hypothesis_list) for yi, y in enumerate(x)]
+            h_chars = list(''.join(hypothesis_list))
+            h = tf.SparseTensor(h_indices, h_chars, [num_h_words, 1, 1])
+            truth_word_vec = truth_list*num_h_words
+            t_indices = [[xi, 0, yi] for xi, x in enumerate(truth_word_vec) for yi, y in enumerate(x)]
+            t_chars = list(''.join(truth_word_vec))
+            t = tf.SparseTensor(t_indices, t_chars, [num_h_words, 1, 1])
+            print(sess.run(tf.edit_distance(h, t, normalize=True)))
 
 
 def analyze(data):
