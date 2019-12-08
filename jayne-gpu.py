@@ -79,7 +79,7 @@ def logger(text):
         logfile.write(text + '\n')
 
 
-def compare(file, text, data):
+def compare(file, text, data, sess):
     count = 0
     for key, v in data.items():
         count = count + 1
@@ -115,15 +115,16 @@ def create_chunks(results):
     return chunk_list
 
 
-def analyze_chunk(chunk):
+def analyze_chunk(chunk, sess):
     for k, v in chunk.items():
         for item in v:
-            compare(k, item, chunk)
+            compare(k, item, chunk, sess)
 
 
 def run(chunk):
+    sess = tf.Session(config=tf.ConfigProto(intra_op_parallelism_threads=10))
     for item in chunk:
-        analyze_chunk(item)
+        analyze_chunk(item, sess)
 
 
 def analyze(data):
@@ -131,8 +132,6 @@ def analyze(data):
         for item in v:
             compare(k, item, data)
 
-
-sess = tf.Session(config=tf.ConfigProto(intra_op_parallelism_threads=10))
 
 start_time = time.clock()
 
