@@ -6,6 +6,8 @@ from printout import display
 import csv
 import os
 import time
+import multiprocessing as mp
+from itertools import combinations
 
 tf.disable_v2_behavior()
 
@@ -96,6 +98,34 @@ def compare(file, text, data):
             print(sess.run(tf.edit_distance(h, t, normalize=True)))
 
 
+# TODO: change "chunk" to "chonk" because James likes cats
+def create_chunk(keys, results):
+    chunk = {}
+    for key in keys:
+        chunk[key] = results[key]
+    return chunk
+
+
+def create_chunks(results):
+    chunk_list = []
+    key_combinations = combinations(results, 2)
+    for keys in key_combinations:
+        chunk = create_chunk(keys, results)
+        chunk_list.append(chunk)
+    return chunk_list
+
+
+def analyze_chunk(chunk):
+    for k, v in chunk.items():
+        for item in v:
+            compare(k, item, chunk)
+
+
+def run(chunk):
+    for item in chunk:
+        analyze_chunk(item)
+
+
 def analyze(data):
     for k, v in data.items():
         for item in v:
@@ -115,7 +145,26 @@ logger('')
 
 results = process_tei(in_dir, min_length)
 
-analyze(results)
+jobs = []
+
+chunks_as_list = create_chunks(results)
+
+chunk_size = int(len(chunks_as_list)/process_count)
+if chunk_size == 0:
+    chunk_size = 1
+
+chunks = [chunks_as_list[x:x+chunk_size]
+          for x in range(0, len(chunks_as_list), chunk_size)]
+
+for chunk in chunks:
+    p = mp.Process(target=run, args=(chunk,))
+    jobs.append(p)
+    p.start()
+
+for job in jobs:
+    job.join()
+
+#analyze(results)
 
 end_time = time.clock()
 
