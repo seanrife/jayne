@@ -102,7 +102,7 @@ def analyze(data):
             compare(k, item, data)
 
 
-sess = tf.Session()
+sess = tf.Session(config=tf.ConfigProto(intra_op_parallelism_threads=10))
 
 start_time = time.clock()
 
