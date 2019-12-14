@@ -24,7 +24,7 @@ aParser.add_argument(
     required=False,
     help="File to store results")
 
-version = '0.58'
+version = '0.64'
 
 settings = vars(aParser.parse_args())
 in_dir = settings["in_dir"]
@@ -67,7 +67,7 @@ def write_line(out_file, file1, file2, text1, text2, score, score_type):
 
 
 def handle_output(key, file, text, item, distance, analysis_type):
-    display(key, file, text, item, distance, analysis_type)
+    #display(key, file, text, item, distance, analysis_type)
     if out_file:
         write_line(out_file, key, file, text, item, distance, analysis_type)
 
@@ -95,7 +95,6 @@ def compare(file, text, data):
             return None
 
 
-# TODO: change "chunk" to "chonk" because James likes cats
 def create_chunk(keys, results):
     chunk = {}
     for key in keys:
@@ -118,12 +117,22 @@ def analyze_chunk(chunk):
             compare(k, item, chunk)
 
 
+def kablooie(dict):
+    output_list = []
+    for key, value in dict.items():
+        for v in value:
+            output_list.append({'file': key, 'sentence': v})
+    return output_list
+
+
 def run(chunk):
     for item in chunk:
         analyze_chunk(item)
 
 
 results = process_tei(in_dir, min_length)
+
+print(kablooie(results))
 
 jobs = []
 
@@ -136,7 +145,7 @@ if chunk_size == 0:
 chunks = [chunks_as_list[x:x+chunk_size]
           for x in range(0, len(chunks_as_list), chunk_size)]
 
-start_time = time.clock()
+#start_time = time.clock()
 
 mkdirp('logs')
 
@@ -154,7 +163,7 @@ for chunk in chunks:
 for job in jobs:
     job.join()
 
-end_time = time.clock()
+#end_time = time.clock()
 
 logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
-logger('Time to process: '.format(end_time-start_time))
+#logger('Time to process: '.format(end_time-start_time))

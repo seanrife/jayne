@@ -40,4 +40,5 @@ def process_tei(data_dir, min_length):
             data = f.read()
         grafs = get_grafs(data, min_length)
         out_dict[file] = grafs
+        
     return out_dict
