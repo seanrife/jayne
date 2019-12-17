@@ -74,22 +74,14 @@ def handle_output(key, file, text, item, distance, analysis_type):
 
 # This function makes me feel sad
 def compare(file1, file2, list1, list2):
-    #start_time = time.clock()
+    start_time = time.clock()
 
     for item1 in list1:
         for item2 in list2:
-            pool.apply_async(get_distance, args=(item1, item2))
-            """if distance <= cutoff_score:
-                handle_output(pair['file1'],
-                              pair['file2'],
-                              item1,
-                              item2,
-                              distance,
-                              analysis_type)
-"""
-    #end_time = time.clock()
+            pool.apply_async(run_comparison, args=(item1, item2, file1, file2))
     pool.close()
     pool.join()
+    end_time = time.clock()
     logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
     logger('Time to process: '.format(end_time-start_time))
 
@@ -122,6 +114,17 @@ def create_pairs(results):
 def logger(text):
     with open(logfile_name, mode='a') as logfile:
         logfile.write(text + '\n')
+
+
+def run_comparison(item1, item2, file1, file2):
+    distance = get_distance(item1, item2)
+    if distance <= cutoff_score:
+        handle_output(file1,
+                      file2,
+                      item1,
+                      item2,
+                      distance,
+                      analysis_type)
 
 
 results = process_tei(in_dir, min_length)
