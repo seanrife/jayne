@@ -4,7 +4,7 @@ from analyze import get_distance
 from parse_tei import process_tei
 from printout import display
 import csv
-import multiprocessing as mp
+from multiprocessing import Pool
 from itertools import combinations
 import os
 import time
@@ -67,9 +67,56 @@ def write_line(out_file, file1, file2, text1, text2, score, score_type):
 
 
 def handle_output(key, file, text, item, distance, analysis_type):
-    #display(key, file, text, item, distance, analysis_type)
+    display(key, file, text, item, distance, analysis_type)
     if out_file:
         write_line(out_file, key, file, text, item, distance, analysis_type)
+
+
+# This function makes me feel sad
+def compare(file1, file2, list1, list2):
+    #start_time = time.clock()
+
+    for item1 in list1:
+        for item2 in list2:
+            pool.apply_async(get_distance, args=(item1, item2))
+            """if distance <= cutoff_score:
+                handle_output(pair['file1'],
+                              pair['file2'],
+                              item1,
+                              item2,
+                              distance,
+                              analysis_type)
+"""
+    #end_time = time.clock()
+    pool.close()
+    pool.join()
+    logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
+    logger('Time to process: '.format(end_time-start_time))
+
+
+def generate_pairlist(results):
+    keylist = []
+    combo_list = []
+    for k, v in results.items():
+        keylist.append(k)
+    combos = combinations(keylist, 2)
+    for combo in combos:
+        combo_list.append(combo)
+    return combo_list
+
+
+def create_pairs(results):
+    pairlist = generate_pairlist(results)
+    pairs = []
+    for pair in pairlist:
+        dict = {
+                'file1': pair[0],
+                'file2': pair[1],
+                'list1': results[pair[0]],
+                'list2': results[pair[1]]
+                }
+        pairs.append(dict)
+    return pairs
 
 
 def logger(text):
@@ -77,93 +124,22 @@ def logger(text):
         logfile.write(text + '\n')
 
 
-def compare(file, text, data):
-    count = 0
-    for key, v in data.items():
-        count = count + 1
-        for item in v:
-            if key is not file:
-                distance = get_distance(text, item)
-                if distance <= cutoff_score:
-                    handle_output(key,
-                                  file,
-                                  text,
-                                  item,
-                                  distance,
-                                  analysis_type)
-        if count > 0:
-            return None
-
-
-def create_chunk(keys, results):
-    chunk = {}
-    for key in keys:
-        chunk[key] = results[key]
-    return chunk
-
-
-def create_chunks(results):
-    chunk_list = []
-    key_combinations = combinations(results, 2)
-    for keys in key_combinations:
-        chunk = create_chunk(keys, results)
-        chunk_list.append(chunk)
-    return chunk_list
-
-
-def analyze_chunk(chunk):
-    for k, v in chunk.items():
-        for item in v:
-            compare(k, item, chunk)
-
-
-def kablooie(dict):
-    output_list = []
-    for key, value in dict.items():
-        for v in value:
-            output_list.append({'file': key, 'sentence': v})
-    return output_list
-
-
-def run(chunk):
-    for item in chunk:
-        analyze_chunk(item)
-
-
 results = process_tei(in_dir, min_length)
 
-print(kablooie(results))
-
-jobs = []
-
-chunks_as_list = create_chunks(results)
-
-chunk_size = int(len(chunks_as_list)/process_count)
-if chunk_size == 0:
-    chunk_size = 1
-
-chunks = [chunks_as_list[x:x+chunk_size]
-          for x in range(0, len(chunks_as_list), chunk_size)]
-
-#start_time = time.clock()
+print("Creating pairs...")
+paired_papers = create_pairs(results)
 
 mkdirp('logs')
 
 logger('jayne v{0} initialized'.format(version))
 logger('START TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
-logger('Total number of comparisons requested: '.format(len(chunks_as_list)))
+logger('Total number of comparisons requested: '.format(len(paired_papers)))
 logger('Number of independent processes: '.format(process_count))
 logger('')
 
-for chunk in chunks:
-    p = mp.Process(target=run, args=(chunk,))
-    jobs.append(p)
-    p.start()
+processes = []
 
-for job in jobs:
-    job.join()
+pool = Pool()
 
-#end_time = time.clock()
-
-logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
-#logger('Time to process: '.format(end_time-start_time))
+for pair in paired_papers:
+    comparison = compare(pair['file1'], pair['file2'], pair['list1'], pair['list2'])
