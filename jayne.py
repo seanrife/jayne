@@ -74,14 +74,16 @@ def handle_output(key, file, text, item, distance, analysis_type):
 
 # This function makes me feel sad
 def compare(file1, file2, list1, list2):
-    start_time = time.clock()
+    start_time = time.process_time()
+
+    pool = Pool()
 
     for item1 in list1:
         for item2 in list2:
             pool.apply_async(run_comparison, args=(item1, item2, file1, file2))
     pool.close()
     pool.join()
-    end_time = time.clock()
+    end_time = time.process_time()
     logger('END TIME: {0}'.format(time.strftime("%Y-%m-%d %H:%M:%S")))
     logger('Time to process: '.format(end_time-start_time))
 
@@ -141,8 +143,6 @@ logger('Number of independent processes: '.format(process_count))
 logger('')
 
 processes = []
-
-pool = Pool()
 
 for pair in paired_papers:
     comparison = compare(pair['file1'], pair['file2'], pair['list1'], pair['list2'])
