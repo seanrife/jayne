@@ -18,7 +18,8 @@ def get_grafs(xml_input, min_length):
             elif config.analysis['level'] == 'paragraph':
                 item = graf
             for i in item:
-                grafs_list.append(i)
+                if len(i) >= min_length:
+                    grafs_list.append(i)
     return grafs_list
 
 
