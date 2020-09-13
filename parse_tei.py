@@ -15,11 +15,11 @@ def get_grafs(xml_input, min_length):
         if len(graf) >= min_length:
             if config.analysis['level'] == 'sentence':
                 item = sent_tokenize(str(graf))
+                for i in item:
+                    if len(i) >= min_length:
+                        grafs_list.append(i)
             elif config.analysis['level'] == 'paragraph':
-                item = graf
-            for i in item:
-                if len(i) >= min_length:
-                    grafs_list.append(i)
+                grafs_list.append(graf)
     return grafs_list
 
 
