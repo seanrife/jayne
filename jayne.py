@@ -132,7 +132,10 @@ def run_comparison(item1, item2, file1, file2):
 results = process_tei(in_dir, min_length)
 
 print("Creating pairs...")
+
 paired_papers = create_pairs(results)
+
+print("Done! Running comparisons.")
 
 mkdirp('logs')
 
